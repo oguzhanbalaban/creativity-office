@@ -1,0 +1,15 @@
+{
+  "platform": "Windows",
+  "powershell": "Windows PowerShell 5.1",
+  "ek_powershell_modulu": [],
+  "ajan_cagrilari": {
+    "en_az_bir_arac": [
+      "Claude Code (claude.exe)",
+      "Codex CLI (codex.exe)"
+    ],
+    "gereksinim": "Kurulu ve oturumu açık CLI; hesabınızın erişebildiği model; internet erişimi"
+  },
+  "git": "Depoyu klonlamak için; çalışma zamanında gerekli değil",
+  "ana_ofis": "İsteğe bağlı gorev-ekle.ps1 köprüsü; varsayılan yerel dosya teslimi",
+  "test": "Yalnızca Windows PowerShell 5.1; AI hesabı ve ağ gerekmez"
+}

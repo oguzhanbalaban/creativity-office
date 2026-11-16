@@ -1,0 +1,10 @@
+{
+  "uyeler": [
+    { "anahtar": "fikirci", "rol": "Fikir Üretici", "gorev": "2-3 özgün ve uygulanabilir alternatif üretir.", "istem": "fikirci.md" },
+    { "anahtar": "elestirmen", "rol": "Eleştirmen", "gorev": "Fizibilite, eksikler ve riskleri inceler; bir fikir seçer.", "istem": "elestirmen.md" },
+    { "anahtar": "planlamaci", "rol": "POC Planlayıcı", "gorev": "Küçük ve test edilebilir POC planı çıkarır.", "istem": "planlamaci.md" },
+    { "anahtar": "maliyet", "rol": "Maliyet Analisti", "gorev": "Süre, çağrı ve kaynak maliyetini tahmin eder.", "istem": "maliyet.md" },
+    { "anahtar": "karar-verici", "rol": "Karar Verici", "gorev": "Onaylar, en fazla üç revizyon ister veya reddeder.", "istem": "karar-verici.md" },
+    { "anahtar": "puanlayici", "rol": "Puanlayıcı", "gorev": "Tamamlanan çıktıyı kanıtlarıyla 1-10 puanlar.", "istem": "puanlayici.md" }
+  ]
+}

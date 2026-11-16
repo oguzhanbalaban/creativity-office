@@ -1,0 +1,54 @@
+{
+  "surum": 1,
+  "ana_ofis_yolu": "",
+  "varsayilan_proje": "",
+  "revizyon_siniri": 3,
+  "dongu": {
+    "bos_bekleme_sn": 30,
+    "adim_arasi_sn": 5,
+    "hata_bekleme_dk": 10,
+    "max_adim_denemesi": 3,
+    "bekci_dk": 12,
+    "calisma_saatleri": "00:00-24:00",
+    "izleme_araligi_sn": 300
+  },
+  "zaman_asimi_dk": {
+    "claude": 25,
+    "codex": 45
+  },
+  "gunluk_sinir": {
+    "claude": 12,
+    "codex": 18
+  },
+  "claude": {
+    "exe": "",
+    "kullanim_dosyasi": "",
+    "kullanim_dosyasi_gecerlilik_saat": 3,
+    "min_kalan_yuzde": 30
+  },
+  "codex": {
+    "exe": ""
+  },
+  "roller": {
+    "ortak": [
+      {
+        "arac": "claude",
+        "model": "sonnet"
+      },
+      {
+        "arac": "codex",
+        "model": "gpt-6.1-sol",
+        "efor": "high"
+      }
+    ]
+  },
+  "bildirim": {
+    "masaustu": false,
+    "telefon": {
+      "kanal": "ntfy",
+      "ntfy_sunucu": "https://ntfy.sh",
+      "ntfy_konu": ""
+    },
+    "ayni_bildirim_arasi_dk": 60
+  }
+}

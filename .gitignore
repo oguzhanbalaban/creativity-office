@@ -1,0 +1,12 @@
+# Yerel yapılandırma ve çalışma verileri
+*.yerel.json
+*.yerel.json.bak
+/gorevler/
+/durum/
+/gunluk/
+/raporlar/
+/calisma/
+/.test-calisma/
+/DURDUR
+*.tmp
+*.log
