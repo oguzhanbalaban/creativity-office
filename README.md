@@ -5,10 +5,15 @@ karar ve puanlama hattı. Her görev kendi belgelerini, revizyonlarını ve sonu
 Altı rol aynı yapılandırılabilir Claude/Codex araç zincirini sırayla kullanır;
 teslim paketi hazırlama yardımcı adımı da bu zincirle çalışır.
 
+Ofis bir **canlı piksel stüdyo** olarak görünür: altı ajan sıralı istasyonlarında oturur, fikir
+kartını elden ele taşır, onaylanan POC'u "AI Ofis" kapısından teslim eder, dönen sonucu puanlar.
+Web panelinden ofisi açıp kapatır, konu verir, ajanlarla sohbet eder; telefondan da erişebilirsiniz.
+
 Bu depo kendi Git geçmişi, betikleri, istemleri ve testleriyle bağımsızdır.
-Varsayılan yerel teslim modu başka bir depo gerektirmez. Kod uygulaması otomatik yapılmaz:
-onaylı POC paketini bir uygulayıcıya verirsiniz, çıkan kanıtları geri ekleyerek puanlatırsınız.
-İsteğe bağlı ana ofis köprüsü aynı paketi harici bir görev sistemine aktarabilir.
+Varsayılan yerel teslim modu başka bir depo gerektirmez: onaylı POC paketini bir uygulayıcıya
+verirsiniz, çıkan kanıtları geri ekleyerek puanlatırsınız. İsteğe bağlı **AI Ofis köprüsü**
+(`ana_ofis_yolu`) onaylı paketi [AI Ofis](https://github.com/oguzhanbalaban/ai-ofis) ekibine
+görev olarak gönderir, sonucu izler ve kendiliğinden puanlatır.
 
 ## Gereksinimler ve bağımlılıklar
 
@@ -134,7 +139,7 @@ gönderilmez. Harici görevlerde `[yaratici-ofis:<anahtar>]` işaretini kontrol 
 yedekleyip kaldırarak yeniden deneyebilirsiniz. Teslimden sonra köprü yolu görevde sabitlenir.
 Harici sistemde `takildi`/`iptal` yerel görevi de durdurur; iptal komutu harici görevi iptal etmez.
 
-## Web paneli
+## Canlı stüdyo paneli
 
 Depo kökünde tek komutla başlatın (Node.js, npm, ek modül veya yönetici izni gerekmez):
 
@@ -142,40 +147,76 @@ Depo kökünde tek komutla başlatın (Node.js, npm, ek modül veya yönetici iz
 powershell -NoProfile -ExecutionPolicy Bypass -File .\ofis\ofis.ps1 -Ac
 ```
 
-Tarayıcıda **http://127.0.0.1:8766/** açılır. Konsolda günlük görmek için `-Konsol`
-ekleyin. Bu terminali açık bırakın. Aynı Windows oturumunda ikinci panel sunucusu
-başlamaz; `-Ac` mevcut paneli açar. Özel port için `-Port 8770` kullanabilirsiniz;
-port doluysa sunucu açık hata verir, sessizce başka porta geçmez. AI Ekip panelinin
-8765 portuyla çakışmaz.
+Tarayıcıda **http://127.0.0.1:8766/** açılır (AI Ofis panelinin 8765 portuyla çakışmaz).
+Masaüstü kısayolu için bir kez `.\ofis\kisayol-olustur.ps1` çalıştırın: "Creativity Office"
+kısayolu paneli pencere açmadan başlatır. Aynı Windows oturumunda ikinci panel sunucusu başlamaz;
+`-Ac` mevcut paneli açar. Özel port için `-Port 8770`; port doluysa sunucu açık hata verir.
 
-Panel altı ajanın durumunu, görevleri, revizyon ve puanları, fikirden puanlamaya
-iş hattını ve görev belgelerini dört saniyede bir günceller. **Yeni konu** formu
-`proje-ekle.ps1` üzerinden kuyruğa görev ekler. Takılan görev devam ettirilebilir;
-açık görev iptal edilebilir. Döngü durduğunda görev verileri görünmeye devam eder.
-Panel, ajan döngüsünü kendiliğinden başlatmaz: görevleri işlemek için ayrı terminalde
-`.\baslat.ps1 -Konsol` çalıştırın. Teslim sonrası kanıt eklemek için yukarıdaki
-`sonuc-ekle.ps1` komutu kullanılır. Altı kadrolu role ek olarak teslim hazırlığı
-yardımcı bir adımdır.
+**Sahne.** Her şey kodla çizilen bir piksel stüdyodur (dış görsel/kütüphane yok):
 
-Paneli durdurmak için **Paneli durdur** düğmesine, sunucu terminalinde **Ctrl+C**'ye
-basın veya ikinci terminalde tek komut çalıştırın:
+- Altı ajanın sıralı istasyonları: 1 Fikir · 2 Eleştiri · 3 POC planı · 4 Maliyet · 5 Karar · 6 Puan.
+  Çalışan ajan masasında oturur; balonunda ne yaptığı ve hangi konuda olduğu yazar
+  (fikirci çalışırken başının üstünde ampul yanar). Masanın önündeki renkli kartlar o istasyonda
+  sırası gelen konulardır.
+- Aşama değişince kart elden ele taşınır: fikirci → eleştirmen → planlayıcı → maliyet → karar.
+  Onayda "✅ ONAY" yazar; karar verici paketi **AI Ofis** kapısına götürür. Revizyonda kart
+  eleştirmene geri döner ("↩ Revizyon 1/3"); redde öğütücüye atılır. AI Ofis'ten sonuç gelince
+  puanlayıcı kapıdan teslim alır; puan tabelaya yazılır, 7 ve üstünde konfeti atılır.
+- Duvarda fikir panosu (açık konular aşama renginde), puan tablosu, saat ve gökyüzü (gün/gece).
+  Boştaki ajanlar beyin fırtınası tahtasına, dinlenme köşesine, mutfağa gider, birbiriyle konuşur.
+- Ajana tıkla: sohbet penceresi açılır. AI Ofis kapısına tıkla: AI Ofis paneli açılır.
+  Beyaz tahtaya tıkla: boştakiler beyin fırtınasına gelir. Kahve makinesine tıkla: kahve molası.
+
+**Ofisi aç / kapat.** Ofis her zaman açık olmak zorunda değildir. **☀️ Ofisi aç** ajan döngüsünü
+(`baslat.ps1`) pencere açmadan başlatır; ekip girişten gelip masalarına oturur. **🌙 Ofisi kapat**
+`DURDUR` dosyası bırakır: çalışan ajan elindeki adımı bitirir, sonra ekip çıkar; kuyruk korunur.
+Ofis açıkken döngü kapanırsa ya da donarsa panel onu yeniden başlatır (niyet `durum/ofis.json`).
+
+**Yeni konu.** "＋ Yeni konu" formu `proje-ekle.ps1` üzerinden kuyruğa görev ekler; ofis kapalıysa
+aynı anda açabilir. Ajanlar sohbette konu önerirse "Konu olarak ekle" düğmesi formu doldurur.
+
+**Sohbet.** Her ajanla panelden yazışılır (`ofis/sohbet.ps1`): ajan kendi rolünün bakış açısıyla,
+ofisteki konuları bilerek ve gerekirse görev belgelerini **yalnızca okuyarak** yanıt verir; dosya
+değiştirmez, iş göndermez. Sohbet çağrıları günlük sınıra sayılır; aynı anda en fazla 3 sohbet yanıtlanır.
+
+**Fikir akışı panosu ve ayrıntı.** Sahnenin altında konular aşama sütunlarında durur. Karta tıklayınca
+çekmece açılır: aşama çizelgesi, revizyon geri bildirimleri, yolculuk, AI Ofis'teki aşaması,
+fikir/eleştiri/POC/maliyet/karar/teslim/çıktı/puanlama belgeleri (Markdown), devam ettir / iptal.
+
+Paneli durdurmak için ikinci terminalde:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\ofis\ofis.ps1 -Durdur
 ```
 
-Sekmeyi kapatmak sunucuyu hemen durdurmaz; varsayılan olarak 60 dakika istek
-gelmezse kapanır (`-BosKapanDk 10`; `0` otomatik kapanmayı kapatır). Bu işlemler
-yalnızca paneli durdurur; ajan döngüsünü durdurmak için **Kullanım** bölümündeki
-`DURDUR` dosyası yöntemini kullanın.
+Panel varsayılan olarak 60 dakika istek gelmezse ve ofis kapalıysa kendiliğinden kapanır
+(`-BosKapanDk 0` kapatmaz; telefondan erişim açıksa da kapanmaz). Paneli kapatmak ajan döngüsünü
+durdurmaz; ofisi kapatmak için paneldeki düğmeyi kullanın.
 
-Sunucu yalnızca `127.0.0.1` üzerinde dinler. Host, Origin ve Sec-Fetch-Site denetimleri
-ve bütün API isteklerinde `X-Oturum` doğrulaması vardır. Oturum anahtarı her açılışta
-yenilenir ve diske yazılmaz. `/api/durum` görevleri, kalp atışını, sayaçları ve kadroyu;
-`/api/gorev?id=...` görev belgelerini döndürür. API'ler panel oturumu gerektirir.
-`ofis/sunucu.json` yalnızca PID/port/başlangıç bilgisi, `ofis/ofis.log` sunucu günlüğüdür;
-ikisi de Git dışındadır. Veri dosyaları döngünün atomik yazmalarını engellemeden okunur.
-Panel koyu/açık sistem temasını, küçük ekranları ve azaltılmış hareket tercihini destekler.
+## Telefondan erişim
+
+Bilgisayara ve telefona [Tailscale](https://tailscale.com/download) kurup aynı hesapla giriş yapın,
+yönetim sayfasında MagicDNS ve HTTPS sertifikalarını açın, sonra bir kez:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ofis\telefon-kur.ps1
+```
+
+Betik `ofis/uzak.json`'a bilgisayarın Tailscale adını ve hesabınızı yazar, `tailscale serve` ile
+paneli **yalnızca Tailscale ağınıza** `https://<bilgisayar>.<ağ>.ts.net:8443/` adresinde açar
+(443 portu AI Ofis'e bırakılır) ve panel sunucusunu oturum açılışında başlatan
+`\Creativity-Office\Panel` zamanlanmış görevini kurar. Panel yine yalnızca 127.0.0.1'i dinler;
+güvenlik duvarına dokunulmaz, internete açılmaz. Uzak istek yalnızca `uzak.json`'daki
+Tailscale hesabıyla (`Tailscale-User-Login`) kabul edilir. Telefonda adresi açıp tarayıcı menüsünden
+"Ana ekrana ekle" deyin; uygulama gibi açılır. Kaldırmak için: `.\ofis\telefon-kur.ps1 -Kaldir`.
+
+## Güvenlik notları
+
+Sunucu yalnızca `127.0.0.1` üzerinde dinler. Host, Origin ve Sec-Fetch-Site denetimleri ve bütün
+API isteklerinde `X-Oturum` doğrulaması vardır. Oturum anahtarı her açılışta yenilenir ve diske
+yazılmaz. Kullanıcı girdisi komut metnine çevrilmez; sabit betiklere parametre olarak bağlanır.
+`ofis/sunucu.json`, `ofis/ofis.log`, `ofis/uzak.json`, üretilen simgeler ve `durum/` Git dışındadır.
+Panel koyu/açık temayı, telefon ekranını ve azaltılmış hareket tercihini destekler.
 
 ## Test ve doğrulama
 
@@ -187,6 +228,8 @@ powershell.exe -NoProfile -NonInteractive -File .\testler\panel.test.ps1
 Testler depo içindeki geçici kopyada sahte ajanlar ve isteğe bağlı köprünün küçük sözleşme
 düzeneğini kullanır; üst klasörden dosya almaz. Sözdizimi/UTF-8 BOM, boş kuyruk, yedek araç,
 çağrı sınırı, revizyon/red, teslim tekilliği, hata kurtarma, yerel çıktı ve puanlama doğrulanır.
+Panel testi ayrıca güvenlik denetimlerini, çalışan ajanın kalpten çıkarılmasını, ofisi aç/kapat,
+sohbet, ofis günlüğü, uygulama manifesti ve Tailscale hesap denetimini (sahte başlıklarla) sınar.
 Gerçek AI/ağ çağrısı, kurulum, commit, zamanlanmış görev veya sistem ayarı değişikliği yapılmaz.
 Canlı model yanıtları ve harici görev sisteminin tamamı bu çevrimdışı testin kapsamı dışındadır.
 

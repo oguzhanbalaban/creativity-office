@@ -12,3 +12,6 @@
 *.log
 ofis/sunucu.json
 ofis/ofis.log
+ofis/uzak.json
+ofis/simge-*.png
+ofis/ofis.ico

@@ -64,6 +64,11 @@ try {
     New-Item -ItemType Directory -Path $testKok -Force | Out-Null
     foreach ($ad in @('proje-ekle.ps1','durum.ps1','ortak.ps1','ayarlar.json','kadro.json')) { Copy-Item -LiteralPath (Join-Path $kaynak $ad) -Destination $testKok }
     Copy-Item -LiteralPath (Join-Path $kaynak 'ofis') -Destination $testKok -Recurse
+    # Gerçek kurulumun çalışma kayıtları ve uzak erişim ayarı test kopyasına taşınmaz.
+    foreach ($ad in @('uzak.json','sunucu.json','ofis.log')) { $y = Join-Path $testKok "ofis/$ad"; if (Test-Path -LiteralPath $y) { Remove-Item -LiteralPath $y -Force } }
+    # Ajan döngüsü ve sohbet yerine iz bırakan sahte betikler: gerçek AI çağrısı yapılmaz.
+    [IO.File]::WriteAllText((Join-Path $testKok 'baslat.ps1'), "[IO.File]::WriteAllText((Join-Path `$PSScriptRoot 'durum/baslat-cagrildi.txt'), 'evet')", $utf8Test)
+    [IO.File]::WriteAllText((Join-Path $testKok 'ofis/sohbet.ps1'), "param([string]`$Rol)`n`$y = Join-Path (Split-Path -Parent `$PSScriptRoot) ""durum/sohbet/`$Rol.jsonl""`n[IO.File]::AppendAllText(`$y, '{""zaman"":""2026-01-01T00:00:00Z"",""kim"":""ajan"",""metin"":""Sahte yanıt"",""arac"":""test""}' + ""``n"")", $utf8Test)
     $betik = Join-Path $testKok 'ofis/ofis.ps1'
     # Test gerçek bir panelin mutex'ine veya çalışma verilerine dokunmaz.
     [IO.File]::WriteAllText($betik,([IO.File]::ReadAllText($betik).Replace('Local\YaraticiOfisPaneli',('Local\YaraticiPanelTest' + [guid]::NewGuid().ToString('N')))),(New-Object Text.UTF8Encoding $true))
@@ -154,6 +159,48 @@ try {
     [IO.File]::WriteAllText($durumYol,'{yarim',$utf8Test)
     $r = Istek ('/api/gorev?id=' + $id)
     Dogrula ($r.kod -eq 200 -and ($r.govde|ConvertFrom-Json).asama -eq 'iptal') 'Geçici bozuk JSON durumunda yedek okunuyor'
+    # Ajan çağrısı sürerken kalp "adım" yerine "<rol> (<araç/model>)" taşır; teslim hazırlığı karar vericiye düşer.
+    $kalp.durum = 'claude çalışıyor'; $kalp.adim = 'elestirmen (claude/sonnet)'; $kalp.zaman = (Get-Date).ToString('o'); JsonYaz $kalpYol $kalp
+    $d = (Istek '/api/durum').govde | ConvertFrom-Json
+    Dogrula ($d.aktif_ajan -eq 'elestirmen' -and @($d.kadro | Where-Object { $_.anahtar -eq 'elestirmen' -and $_.durum -eq 'calisiyor' -and $_.arac -eq 'claude/sonnet' }).Count -eq 1) 'Ajan çağrısındaki rol ve araç panelde çalışıyor görünüyor'
+    $kalp.durum = 'codex çalışıyor'; $kalp.adim = 'teslim (codex/gpt-6.1-sol)'; JsonYaz $kalpYol $kalp
+    $d = (Istek '/api/durum').govde | ConvertFrom-Json
+    Dogrula ($d.aktif_ajan -eq 'karar-verici') 'Teslim hazırlığı karar vericinin istasyonunda gösteriliyor'
+    Dogrula ($null -ne $d.ofis -and $null -ne $d.ana_ofis -and $null -ne $d.olaylar -and @($d.gorevler)[0].no -ge 1) 'Durum ofis, AI Ofis, olay ve sıra numarası alanlarını içeriyor'
+    $kalp.durum = 'durdu'; JsonYaz $kalpYol $kalp
+    # Ofisi kapat / aç
+    $r = Istek '/api/ofis-kapat' 'POST' '{}'
+    $durdurYol = Join-Path $testKok 'DURDUR'
+    Dogrula ($r.kod -eq 200 -and (Test-Path -LiteralPath $durdurYol) -and ([IO.File]::ReadAllText($durdurYol) -match '^Ofis kapatıldı')) 'Ofisi kapat DURDUR dosyası bırakıyor'
+    $d = (Istek '/api/durum').govde | ConvertFrom-Json
+    Dogrula (-not $d.ofis.acik -and $d.ofis.durdur) 'Kapalı ofis durumda kapalı görünüyor'
+    $r = Istek '/api/ofis-ac' 'POST' '{}'
+    $isaret = Join-Path $testKok 'durum/baslat-cagrildi.txt'
+    $basladi = $false; for ($i = 0; $i -lt 50 -and -not $basladi; $i++) { Start-Sleep -Milliseconds 100; $basladi = Test-Path -LiteralPath $isaret }
+    Dogrula ($r.kod -eq 200 -and -not (Test-Path -LiteralPath $durdurYol) -and $basladi) 'Ofisi aç DURDUR dosyasını kaldırıp ajan döngüsünü başlatıyor'
+    Dogrula (((Istek '/api/durum').govde | ConvertFrom-Json).ofis.acik) 'Açık ofis niyeti durumda görünüyor'
+    $null = Istek '/api/ofis-kapat' 'POST' '{}'
+    # Sohbet
+    $r = Istek '/api/sohbet' 'POST' '{"rol":"lider","metin":"selam"}'
+    Dogrula ($r.kod -eq 400) 'Kadroda olmayan role sohbet reddediliyor'
+    $r = Istek '/api/sohbet' 'POST' '{"rol":"fikirci","metin":"   "}'
+    Dogrula ($r.kod -eq 400) 'Boş sohbet mesajı reddediliyor'
+    $r = Istek '/api/sohbet?rol=..%2Fdisari'
+    Dogrula ($r.kod -eq 400) 'Sohbet okumada geçersiz rol reddediliyor'
+    $r = Istek '/api/sohbet' 'POST' (@{ rol='fikirci'; metin='Merhaba <b>"fikirci"</b> $(komut)' } | ConvertTo-Json -Compress)
+    Dogrula ($r.kod -eq 200 -and (($r.govde | ConvertFrom-Json).mesajlar[-1].metin -ceq 'Merhaba <b>"fikirci"</b> $(komut)')) 'Sohbet mesajı veri olarak kaydediliyor'
+    $yanit = $false; for ($i = 0; $i -lt 60 -and -not $yanit; $i++) { Start-Sleep -Milliseconds 100; $m = ((Istek '/api/sohbet?rol=fikirci').govde | ConvertFrom-Json).mesajlar; $yanit = @($m | Where-Object { $_.kim -eq 'ajan' }).Count -gt 0 }
+    Dogrula $yanit 'Sohbet betiği başlatılıyor ve yanıt panelden okunuyor'
+    # Günlük: görev kimliği sıra numarasına çevrilir, sohbet satırları ayıklanır
+    $gunlukYol = Join-Path $testKok ('gunluk/yaratici-{0}.log' -f (Get-Date).ToString('yyyyMMdd'))
+    [IO.File]::AppendAllText($gunlukYol, ("{0} [BILGI] {1}: -> elestiri ()`r`n{0} [BILGI] fikirci -> claude/sonnet başlıyor [sohbet-fikirci / sohbet-fikirci]`r`n" -f (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'), $id), $utf8Test)
+    $o = @(((Istek '/api/durum').govde | ConvertFrom-Json).olaylar)
+    Dogrula ((@($o | Where-Object { $_.metin -match '^#\d+: -> elestiri' }).Count -ge 1) -and -not (@($o | Where-Object { $_.metin -match 'sohbet-' }).Count)) 'Ofis günlüğü sıra numarasıyla ve sohbetsiz gösteriliyor'
+    # Telefona eklenebilir uygulama (PWA)
+    $r = Istek '/manifest.webmanifest' -Anahtarsiz
+    Dogrula ($r.kod -eq 200 -and ($r.govde | ConvertFrom-Json).name -eq 'Creativity Office') 'Uygulama manifesti oturumsuz sunuluyor'
+    $r = Istek '/simge-999.png' -Anahtarsiz
+    Dogrula ($r.kod -eq 404) 'Yalnızca bilinen simge adları sunuluyor'
     $onBaglanti = [Net.Sockets.TcpClient]::new('127.0.0.1',$testPort)
     $r = Istek '/api/durum'
     Dogrula ($r.kod -eq 200) 'Boş tarayıcı ön bağlantısı diğer istekleri engellemiyor'
@@ -166,12 +213,26 @@ try {
     Dogrula ($sunucu.WaitForExit(5000)) 'Sunucu süreci temiz kapanıyor'
     Dogrula (-not (Test-Path -LiteralPath (Join-Path $testKok 'ofis/sunucu.json'))) 'Kapanışta çalışma kaydı temizleniyor'
     $eskiAnahtar = $anahtar
+    # Yeniden açılışta telefondan erişim ayarı (Tailscale serve) etkin: yalnızca izinli hesap kabul edilir.
+    JsonYaz (Join-Path $testKok 'ofis/uzak.json') @{ hostlar=@('bilgisayar.ornek.ts.net'); kullanicilar=@('sahip@ornek.com'); ana_panel='https://bilgisayar.ornek.ts.net/' }
     $sayfa = PanelBaslat
     $null = $sayfa.govde -match 'const OTURUM = "([a-f0-9]{32})";'
     $script:anahtar = $Matches[1]
     Dogrula ($anahtar -cne $eskiAnahtar) 'Yeniden başlatmada oturum anahtarı değişiyor'
     $r = Istek '/api/durum' -Baslik @{'X-Oturum'=$eskiAnahtar}
     Dogrula ($r.kod -eq 401) 'Önceki oturum yeni sunucuda reddediliyor'
+    $uzakHost = 'bilgisayar.ornek.ts.net:8443'
+    $r = Istek '/' -Baslik @{ Host=$uzakHost }
+    Dogrula ($r.kod -eq 403) 'Tailscale kimliği olmayan uzak istek reddediliyor'
+    $r = Istek '/' -Baslik @{ Host=$uzakHost; 'Tailscale-User-Login'='baska@ornek.com' }
+    Dogrula ($r.kod -eq 403) 'İzinsiz Tailscale hesabı reddediliyor'
+    $r = Istek '/' -Baslik @{ Host='127.0.0.1:' + $testPort; 'Tailscale-User-Login'='baska@ornek.com' }
+    Dogrula ($r.kod -eq 403) 'Yerel adrese sahte Tailscale kimliği reddediliyor'
+    $r = Istek '/api/durum' -Baslik @{ Host=$uzakHost; 'Tailscale-User-Login'='Sahip@Ornek.com'; Origin=('https://' + $uzakHost); 'Sec-Fetch-Site'='same-origin' }
+    $d = $r.govde | ConvertFrom-Json
+    Dogrula ($r.kod -eq 200 -and $d.uzak -eq $true) 'İzinli hesap telefondan (HTTPS Origin ile) API kullanabiliyor'
+    $r = Istek '/api/durum' -Baslik @{ Host=$uzakHost; 'Tailscale-User-Login'='sahip@ornek.com'; Origin=('http://' + $uzakHost) }
+    Dogrula ($r.kod -eq 403) 'Uzak istekte HTTPS dışı Origin reddediliyor'
     $r = Istek '/api/kapat' 'POST' '{}'
     Dogrula ($r.kod -eq 200 -and $sunucu.WaitForExit(5000)) 'Panel düğmesinin kapatma API çağrısı çalışıyor'
     Write-Host "Toplam $script:kontrol panel kontrolü geçti. Yalnızca loopback kullanıldı."

@@ -1,6 +1,8 @@
 ﻿param([switch]$Konsol, [ValidateRange(0,2147483647)][int]$AdimSiniri = 0, [switch]$BosBitir)
 $ErrorActionPreference = 'Stop'
 $script:Konsol = [bool]$Konsol
+# Etkileşimli bir oturumdan (ör. Claude Code) devralınan değişkenler arka plandaki claude.exe girişini bozar.
+foreach ($ad in @(Get-ChildItem env: | Where-Object { $_.Name -match '^(CLAUDE|ANTHROPIC)' } | ForEach-Object { $_.Name })) { Remove-Item -LiteralPath "env:$ad" -ErrorAction SilentlyContinue }
 . (Join-Path $PSScriptRoot 'ortak.ps1')
 . (Join-Path $PSScriptRoot 'dongu.ps1')
 Ayarlari-Yukle
