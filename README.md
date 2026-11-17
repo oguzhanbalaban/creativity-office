@@ -134,10 +134,54 @@ gönderilmez. Harici görevlerde `[yaratici-ofis:<anahtar>]` işaretini kontrol 
 yedekleyip kaldırarak yeniden deneyebilirsiniz. Teslimden sonra köprü yolu görevde sabitlenir.
 Harici sistemde `takildi`/`iptal` yerel görevi de durdurur; iptal komutu harici görevi iptal etmez.
 
+## Web paneli
+
+Depo kökünde tek komutla başlatın (Node.js, npm, ek modül veya yönetici izni gerekmez):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ofis\ofis.ps1 -Ac
+```
+
+Tarayıcıda **http://127.0.0.1:8766/** açılır. Konsolda günlük görmek için `-Konsol`
+ekleyin. Bu terminali açık bırakın. Aynı Windows oturumunda ikinci panel sunucusu
+başlamaz; `-Ac` mevcut paneli açar. Özel port için `-Port 8770` kullanabilirsiniz;
+port doluysa sunucu açık hata verir, sessizce başka porta geçmez. AI Ekip panelinin
+8765 portuyla çakışmaz.
+
+Panel altı ajanın durumunu, görevleri, revizyon ve puanları, fikirden puanlamaya
+iş hattını ve görev belgelerini dört saniyede bir günceller. **Yeni konu** formu
+`proje-ekle.ps1` üzerinden kuyruğa görev ekler. Takılan görev devam ettirilebilir;
+açık görev iptal edilebilir. Döngü durduğunda görev verileri görünmeye devam eder.
+Panel, ajan döngüsünü kendiliğinden başlatmaz: görevleri işlemek için ayrı terminalde
+`.\baslat.ps1 -Konsol` çalıştırın. Teslim sonrası kanıt eklemek için yukarıdaki
+`sonuc-ekle.ps1` komutu kullanılır. Altı kadrolu role ek olarak teslim hazırlığı
+yardımcı bir adımdır.
+
+Paneli durdurmak için **Paneli durdur** düğmesine, sunucu terminalinde **Ctrl+C**'ye
+basın veya ikinci terminalde tek komut çalıştırın:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ofis\ofis.ps1 -Durdur
+```
+
+Sekmeyi kapatmak sunucuyu hemen durdurmaz; varsayılan olarak 60 dakika istek
+gelmezse kapanır (`-BosKapanDk 10`; `0` otomatik kapanmayı kapatır). Bu işlemler
+yalnızca paneli durdurur; ajan döngüsünü durdurmak için **Kullanım** bölümündeki
+`DURDUR` dosyası yöntemini kullanın.
+
+Sunucu yalnızca `127.0.0.1` üzerinde dinler. Host, Origin ve Sec-Fetch-Site denetimleri
+ve bütün API isteklerinde `X-Oturum` doğrulaması vardır. Oturum anahtarı her açılışta
+yenilenir ve diske yazılmaz. `/api/durum` görevleri, kalp atışını, sayaçları ve kadroyu;
+`/api/gorev?id=...` görev belgelerini döndürür. API'ler panel oturumu gerektirir.
+`ofis/sunucu.json` yalnızca PID/port/başlangıç bilgisi, `ofis/ofis.log` sunucu günlüğüdür;
+ikisi de Git dışındadır. Veri dosyaları döngünün atomik yazmalarını engellemeden okunur.
+Panel koyu/açık sistem temasını, küçük ekranları ve azaltılmış hareket tercihini destekler.
+
 ## Test ve doğrulama
 
 ```powershell
 powershell.exe -NoProfile -NonInteractive -File .\testler\akis.test.ps1
+powershell.exe -NoProfile -NonInteractive -File .\testler\panel.test.ps1
 ```
 
 Testler depo içindeki geçici kopyada sahte ajanlar ve isteğe bağlı köprünün küçük sözleşme

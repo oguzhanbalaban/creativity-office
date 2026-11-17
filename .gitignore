@@ -10,3 +10,5 @@
 /DURDUR
 *.tmp
 *.log
+ofis/sunucu.json
+ofis/ofis.log
