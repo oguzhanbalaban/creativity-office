@@ -1345,7 +1345,7 @@ function duvarDinamik(x, t) {
     }
     if (parla) { x.fillStyle = `rgba(216,180,254,${0.25 + 0.2 * Math.sin(t / 120)})`; x.fillRect(X, Y, w, h); }
     R(x, X - 1, Y - 1, w + 2, 1, '#a78bfa'); R(x, X - 1, Y + h, w + 2, 1, '#a78bfa'); R(x, X - 1, Y, 1, h, '#a78bfa'); R(x, X + w, Y, 1, h, '#a78bfa');
-    const lamba = ao.canli ? '#4ade80' : ao.bagli ? '#facc15' : '#64748b';
+    const lamba = ao.canli && !ao.kapali ? '#4ade80' : ao.bagli ? '#facc15' : '#64748b';
     R(x, X + w / 2 - 3, Y - 6, 6, 3, '#111827'); R(x, X + w / 2 - 2, Y - 5, 4, 1, lamba);
     if (bekleyen) { glif(x, GLIF_KUM, X + w - 7, Y + h - 7, '#fde68a'); }
   }
@@ -1470,7 +1470,7 @@ function yazilariCiz(t) {
   const ustYazi = (metin, X, Y, renk) => { const tip = yaziTipi(8.5, 750); ctx.font = tip; ctx.fillStyle = renk || '#d6cfe0'; ctx.textBaseline = 'top'; ctx.fillText(metin, X, Y); };
   if (panoYeri) ustYazi('FİKİR PANOSU', (panoYeri.x + 2) * K, (panoYeri.y + panoYeri.h + 1) * K);
   if (skorYeri) ustYazi('PUANLAR', (skorYeri.x + 2) * K, (skorYeri.y + skorYeri.h + 1) * K);
-  if (portal) { const ao = v.ana_ofis || {}; const tip = yaziTipi(8.5, 800); ctx.font = tip; const m = 'AI OFİS'; const w = olc(m, tip); ctx.fillStyle = ao.canli ? '#e9d5ff' : '#a99fb6'; ctx.textBaseline = 'top'; ctx.fillText(m, (portal.x + portal.w / 2) * K - w / 2, (portal.y + portal.h + 1) * K); }
+  if (portal) { const ao = v.ana_ofis || {}; const tip = yaziTipi(8.5, 800); ctx.font = tip; const m = 'AI OFİS'; const w = olc(m, tip); ctx.fillStyle = ao.canli && !ao.kapali ? '#e9d5ff' : '#a99fb6'; ctx.textBaseline = 'top'; ctx.fillText(m, (portal.x + portal.w / 2) * K - w / 2, (portal.y + portal.h + 1) * K); }
   if (giris) { const tip = yaziTipi(8.5, 800); ctx.font = tip; const m = 'GİRİŞ'; const w = olc(m, tip); ctx.fillStyle = '#d6cfe0'; ctx.textBaseline = 'top'; ctx.fillText(m, (giris.x + giris.w / 2) * K - w / 2, (giris.y + giris.h + 1) * K); }
   if (neonYeri) {
     const kapali = ofisKapaliMi(v) && ![...kisiler.values()].some(k => !k.gitti);
@@ -1560,7 +1560,7 @@ function kisiBul(p) {
 }
 function nesneBul(p) {
   const ic = (r, pay = 0) => r && p.x >= r.x - pay && p.x <= r.x + r.w + pay && p.y >= r.y - pay && p.y <= r.y + r.h + pay;
-  if (ic(portal)) { const ao = (veri && veri.ana_ofis) || {}; return { tur: 'portal', ipucu: ao.bagli ? `AI Ofis kapısı (${ao.canli ? 'AI Ofis çalışıyor' : 'AI Ofis şu an kapalı'}): tıkla, AI Ofis panelini aç` : 'AI Ofis kapısı: köprü bağlı değil' }; }
+  if (ic(portal)) { const ao = (veri && veri.ana_ofis) || {}; return { tur: 'portal', ipucu: ao.bagli ? `AI Ofis kapısı (${ao.canli && !ao.kapali ? 'AI Ofis çalışıyor' : 'AI Ofis şu an kapalı'}): tıkla, AI Ofis panelini aç` : 'AI Ofis kapısı: köprü bağlı değil' }; }
   if (ic(panoYeri)) return { tur: 'pano', ipucu: 'Fikir panosu: açık konular aşama renginde. Tıkla, akışa git' };
   if (ic(skorYeri)) return { tur: 'skor', ipucu: 'Puan tablosu: tamamlanan son konuların puanları' };
   if (ic(tahtaYeri)) return { tur: 'tahta', ipucu: 'Beyaz tahta: tıkla, boştakiler beyin fırtınasına gelsin 🧠' };
@@ -1758,7 +1758,7 @@ function ustCiz(v) {
     E('span', { class: 'hud-cip ' + (calisan ? 'calis canli' : o.acik && o.canli ? 'bos' : o.donmus ? 'hata' : 'mor') }, E('i'), calisan ? `${ROL[calisan.anahtar].simge} ${calisan.rol}` : o.acik ? (o.canli ? 'Ekip boşta' : 'Açılıyor') : 'Kapalı'),
     E('span', { class: 'hud-cip mor', title: 'Açık konular' }, `💡 ${acikN} açık`),
     E('span', { class: 'hud-cip altin', title: 'Tamamlanan / ortalama puan' }, `⭐ ${bitenler.length} bitti · ort ${ort}`),
-    E('button', { class: 'hud-cip ' + (ao.canli ? 'calis' : ao.bagli ? 'uyari' : 'bos'), type: 'button', title: 'AI Ofis bağlantısı', onclick: () => anaOfisAc() }, E('i'), ao.bagli ? (ao.canli ? 'AI Ofis çevrimiçi' : 'AI Ofis kapalı') : 'AI Ofis bağlı değil'),
+    E('button', { class: 'hud-cip ' + (ao.canli && !ao.kapali ? 'calis' : ao.bagli ? 'uyari' : 'bos'), type: 'button', title: 'AI Ofis bağlantısı', onclick: () => anaOfisAc() }, E('i'), ao.bagli ? (ao.canli && !ao.kapali ? 'AI Ofis çevrimiçi' : ao.canli ? 'AI Ofis kapanıyor' : 'AI Ofis kapalı') : 'AI Ofis bağlı değil'),
   ];
   $('#hudDurum').replaceChildren(...cipler);
   const s = v.sayaclar || {}, sn = s.sinir || {};
@@ -1791,7 +1791,7 @@ function uyarilarCiz(v) {
   const l = [], ao = v.ana_ofis || {}, o = v.ofis || {}, s = v.sayaclar || {}, sn = s.sinir || {};
   if (!ao.yapilandirildi) l.push(['bilgi', "AI Ofis köprüsü kapalı: onaylanan POC'lar AI Ofis'e gitmez, yerel teslim (sonuc-ekle.ps1) bekler. ayarlar.yerel.json > ana_ofis_yolu ile bağlanır."]);
   else if (!ao.bagli) l.push(['uyari', 'AI Ofis klasörü bulunamadı (ana_ofis_yolu). Onaylanan işler teslim edilemez.']);
-  else if ((v.gorevler || []).some(g => g.asama === 'bekleme') && !ao.canli) l.push(['uyari', "AI Ofis'te bekleyen iş var ama AI Ofis şu an çalışmıyor; AI Ofis açılınca uygulanır."]);
+  else if ((v.gorevler || []).some(g => g.asama === 'bekleme') && (!ao.canli || ao.kapali)) l.push(['uyari', "AI Ofis'te bekleyen iş var ama AI Ofis şu an çalışmıyor; AI Ofis açılınca uygulanır."]);
   if (o.donmus) l.push(['hata', 'Ajan döngüsü 90 saniyedir yanıt vermiyor. Panel birkaç dakika içinde yeniden başlatır.']);
   for (const a of ['claude', 'codex']) if (sn[a] && (s[a] || 0) >= sn[a]) l.push(['uyari', `${a === 'claude' ? 'Claude' : 'Codex'} günlük sınırı doldu (${s[a]}/${sn[a]}). ${a === 'claude' ? 'Codex' : 'Claude'} devralır; ikisi de dolarsa ekip yarını bekler.`]);
   $('#uyarilar').replaceChildren(...l.map(([t, m]) => E('div', { class: 'serit ' + t }, E('span', { text: m }))));
